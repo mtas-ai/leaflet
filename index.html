@@ -25,8 +25,8 @@ html,body{height:100%;background:var(--bg);color:var(--fg);
   background:#fff;display:block;user-select:none;-webkit-user-drag:none;position:relative}
 .bar{position:fixed;left:0;right:0;bottom:0;height:56px;padding-bottom:env(safe-area-inset-bottom);
   display:flex;align-items:center;justify-content:center;gap:14px}
-.label{font-size:13px;color:var(--muted);min-width:9.5em;text-align:center}
-.label b{color:var(--fg);font-weight:700}
+.label{font-size:13px;color:var(--muted);text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.label b{color:var(--fg);font-weight:700;margin-left:4px}
 .dots{display:flex;gap:6px}
 .dots button{width:7px;height:7px;border-radius:50%;border:0;background:rgba(255,255,255,.3);cursor:pointer;padding:0}
 .dots button[aria-current="true"]{background:var(--accent);width:20px;border-radius:4px}
@@ -108,7 +108,7 @@ function go(i) {
 }
 function render() {
   cur = current();
-  label.innerHTML = `<b>${cur + 1}</b> / ${PAGES.length} · ${PAGES[cur].t}`;
+  label.innerHTML = `MTAS AI 소개 리플렛 <b>${cur + 1}</b> / ${PAGES.length}`;
   [...dots.children].forEach((d, i) => d.setAttribute("aria-current", i === cur));
   prev.disabled = cur === 0;
   next.disabled = cur === PAGES.length - 1;
