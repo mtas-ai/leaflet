@@ -78,14 +78,34 @@ let cur = 0;
 
 const fromB64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
 
+const KEY_SLOT = "mtas-leaflet-key";
+const KEY_FORMAT = /^[A-Za-z0-9_-]{22}$/;
+const tabKey = {
+  get() { try { return sessionStorage.getItem(KEY_SLOT); } catch { return null; } },
+  set(v) { try { sessionStorage.setItem(KEY_SLOT, v); } catch {} },
+  clear() { try { sessionStorage.removeItem(KEY_SLOT); } catch {} },
+};
+
+// QR로 들어오면 열쇠를 이 탭에만 기억해 두고 주소창에서는 지운다.
+// 주소를 복사·공유하면 열쇠 없는 주소가 전달되고, 같은 탭 새로고침은 그대로 열린다.
+function takeKey() {
+  const fromUrl = location.hash.slice(1);
+  if (!fromUrl) return tabKey.get();
+  history.replaceState(null, "", location.pathname + location.search);
+  if (!KEY_FORMAT.test(fromUrl)) return null;
+  tabKey.set(fromUrl);
+  return fromUrl;
+}
+
 function lock() {
+  tabKey.clear();
   document.body.classList.add("is-locked");
   document.title = "BIXPO 2026 리플렛";
 }
 
 async function unlock() {
-  const k = location.hash.slice(1);
-  if (!/^[A-Za-z0-9_-]{22}$/.test(k)) return null;
+  const k = takeKey();
+  if (!k || !KEY_FORMAT.test(k)) return null;
   try {
     return await crypto.subtle.importKey("raw", fromB64u(k), "AES-GCM", false, ["decrypt"]);
   } catch { return null; }
