@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>BIXPO 2026 리플렛</title>
-<meta name="robots" content="noindex, nofollow, noarchive, noimageindex">
-<meta name="referrer" content="no-referrer">
-<meta property="og:title" content="BIXPO 2026 · MTAS AI 리플렛">
-<meta property="og:description" content="리플렛의 QR 코드로 열람할 수 있습니다">
+<title>MTAS AI 리플렛</title>
+<meta name="description" content="BIXPO 2026 KEPCO 발명기술혁신대전 · MTAS AI 전력시장 지식·데이터 통합 전문 에이전트 플랫폼">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="MTAS AI 소개 리플렛 · BIXPO 2026">
+<meta property="og:description" content="김대중컨벤션센터 1층 다목적 2홀 A05 부스">
+<meta property="og:image" content="https://mtas-ai.github.io/leaflet/pages/1.jpg">
+<meta property="og:url" content="https://mtas-ai.github.io/leaflet/">
+<meta property="og:type" content="website">
 <meta name="theme-color" content="#0b1a3f">
 <style>
 :root{--bg:#0b1a3f;--fg:#fff;--muted:rgba(255,255,255,.55);--accent:#f7b52c}
@@ -34,15 +37,10 @@ html,body{height:100%;background:var(--bg);color:var(--fg);
   background:rgba(255,255,255,.12);color:#fff;font-size:20px;cursor:pointer;display:none}
 .nav.prev{left:16px}.nav.next{right:16px}
 .nav:disabled{opacity:.25;cursor:default}
-@media (hover:hover) and (min-width:700px){.viewer .nav{display:block}}
+@media (hover:hover) and (min-width:700px){.nav{display:block}}
 .hint{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);font-size:12px;color:#fff;
   background:rgba(0,0,0,.55);padding:7px 14px;border-radius:20px;pointer-events:none;transition:opacity .6s}
 .hint.off{opacity:0}
-.locked{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:24px}
-.locked h1{font-size:18px;font-weight:700;margin-bottom:10px}
-.locked p{font-size:14px;line-height:1.6;color:var(--muted)}
-body.is-locked .locked{display:grid}
-body:not(.viewer) .bar, body:not(.viewer) .hint{display:none}
 </style>
 </head>
 <body>
@@ -57,16 +55,8 @@ body:not(.viewer) .bar, body:not(.viewer) .hint{display:none}
   <div class="dots" id="dots"></div>
 </nav>
 
-<section class="locked" role="alert">
-  <div>
-    <h1>리플렛의 QR 코드로 열어 주세요</h1>
-    <p>이 페이지는 BIXPO 2026 현장에서 배포한<br>리플렛의 QR 코드로만 열람할 수 있습니다.</p>
-  </div>
-</section>
-
 <script>
-// 리플렛 이미지는 data/ 에 AES-GCM 암호문으로만 올라가 있고,
-// 열쇠는 QR 주소의 # 뒤에만 있다 (# 뒤는 서버로 전송되지 않음).
+// 면 이미지와 순서는 pages/pages.json 에 있다 (leaflet-tools/update_leaflet.py 가 만든다).
 const track = document.getElementById("track");
 const dots = document.getElementById("dots");
 const label = document.getElementById("label");
@@ -76,47 +66,8 @@ const hint = document.getElementById("hint");
 let PAGES = [];
 let cur = 0;
 
-const fromB64u = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
-
-const KEY_SLOT = "mtas-leaflet-key";
-const KEY_FORMAT = /^[A-Za-z0-9_-]{22}$/;
-const tabKey = {
-  get() { try { return sessionStorage.getItem(KEY_SLOT); } catch { return null; } },
-  set(v) { try { sessionStorage.setItem(KEY_SLOT, v); } catch {} },
-  clear() { try { sessionStorage.removeItem(KEY_SLOT); } catch {} },
-};
-
-// QR로 들어오면 열쇠를 이 탭에만 기억해 두고 주소창에서는 지운다.
-// 주소를 복사·공유하면 열쇠 없는 주소가 전달되고, 같은 탭 새로고침은 그대로 열린다.
-function takeKey() {
-  const fromUrl = location.hash.slice(1);
-  if (!fromUrl) return tabKey.get();
-  history.replaceState(null, "", location.pathname + location.search);
-  if (!KEY_FORMAT.test(fromUrl)) return null;
-  tabKey.set(fromUrl);
-  return fromUrl;
-}
-
-function lock() {
-  tabKey.clear();
-  document.body.classList.add("is-locked");
-  document.title = "BIXPO 2026 리플렛";
-}
-
-async function unlock() {
-  const k = takeKey();
-  if (!k || !KEY_FORMAT.test(k)) return null;
-  try {
-    return await crypto.subtle.importKey("raw", fromB64u(k), "AES-GCM", false, ["decrypt"]);
-  } catch { return null; }
-}
-
-async function fetchPlain(key, name) {
-  const res = await fetch("data/" + name, { cache: "no-cache" });
-  if (!res.ok) throw new Error(res.status);
-  const buf = new Uint8Array(await res.arrayBuffer());
-  return crypto.subtle.decrypt({ name: "AES-GCM", iv: buf.slice(0, 12) }, key, buf.slice(12));
-}
+// 예전(열쇠 포함) QR 주소로 들어와도 그대로 열리게, 주소창의 # 뒤는 정리만 한다.
+if (location.hash) history.replaceState(null, "", location.pathname + location.search);
 
 function current() {
   const w = track.clientWidth;   // 화면이 아직 그려지기 전이면 0
@@ -135,20 +86,18 @@ function render() {
   if (cur > 0) hint.classList.add("off");
 }
 
-function build(key) {
-  document.body.classList.add("viewer");
-  document.title = "MTAS AI 리플렛";
+function build(version) {
   PAGES.forEach((p, i) => {
     const sec = document.createElement("section");
     sec.className = "page";
     const img = document.createElement("img");
-    img.alt = `${i + 1}면 · ${p.t}`;
+    img.alt = `${i + 1}면 · ${p.title}`;
+    img.decoding = "async";
+    img.fetchPriority = i === 0 ? "high" : "low";   // 표지부터, 나머지도 바로 받기 시작
+    img.onerror = () => sec.classList.add("failed");
+    img.src = `${p.src}?v=${version}`;               // 리플렛이 바뀌면 휴대폰에 남은 예전 이미지 대신 새 이미지
     sec.appendChild(img);
     track.appendChild(sec);
-    // 표지부터 순서대로 받아 풀되, 기다리지 않고 모두 바로 시작
-    fetchPlain(key, p.f).then(plain => {
-      img.src = URL.createObjectURL(new Blob([plain], { type: "image/jpeg" }));
-    }).catch(() => sec.classList.add("failed"));
 
     const d = document.createElement("button");
     d.setAttribute("aria-label", `${i + 1}면으로 이동`);
@@ -168,14 +117,10 @@ function build(key) {
   render();
 }
 
-(async () => {
-  const key = await unlock();
-  if (!key) return lock();
-  try {
-    PAGES = JSON.parse(new TextDecoder().decode(await fetchPlain(key, "manifest.bin"))).pages;
-  } catch { return lock(); }   // 열쇠가 틀리면 복호화 단계에서 실패
-  build(key);
-})();
+fetch("pages/pages.json", { cache: "no-cache" })
+  .then(r => r.json())
+  .then(m => { PAGES = m.pages; build(m.v); })
+  .catch(() => { label.textContent = "리플렛을 불러오지 못했습니다. 새로고침해 주세요."; });
 </script>
 </body>
 </html>

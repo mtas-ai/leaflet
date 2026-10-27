@@ -1,0 +1,29 @@
+{
+ "v": "202610280123",
+ "pages": [
+  {
+   "src": "pages/1.jpg",
+   "title": "표지"
+  },
+  {
+   "src": "pages/2.jpg",
+   "title": "USE CASES · 실제 활용 사례"
+  },
+  {
+   "src": "pages/3.jpg",
+   "title": "WHY · 전력시장 업무의 고민"
+  },
+  {
+   "src": "pages/4.jpg",
+   "title": "STEP 1 · 01 쉬운 질문"
+  },
+  {
+   "src": "pages/5.jpg",
+   "title": "STEP 2 · 02 꼼꼼한 검색·분석"
+  },
+  {
+   "src": "pages/6.jpg",
+   "title": "STEP 3 · 03 근거 있는 답변"
+  }
+ ]
+}
